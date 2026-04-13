@@ -1,8 +1,9 @@
 import { createWriteStream, type WriteStream } from 'node:fs';
 import cliProgress from 'cli-progress';
-import { Constants, Innertube, type IPlayerResponse, Platform, UniversalCache, YTNodes } from 'youtubei.js';
+import { ClientType, Constants, Innertube, type IPlayerResponse, Platform, UniversalCache, YTNodes } from 'youtubei.js';
 import type { Types } from 'youtubei.js';
 
+import { configureProxy } from './proxy-helper.js';
 import { generateWebPoToken } from './webpo-helper.js';
 import type { SabrFormat } from 'googlevideo/shared-types';
 import type { ReloadPlaybackContext } from 'googlevideo/protos';
@@ -48,7 +49,7 @@ export async function makePlayerRequest(innertube: Innertube, videoId: string, r
 
   const extraArgs: Record<string, any> = {
     playbackContext: {
-      adPlaybackContext: { pyv: true },
+      // adPlaybackContext: { pyv: false },
       contentPlaybackContext: {
         vis: 0,
         splay: false,
@@ -166,8 +167,18 @@ export async function createSabrStream(
   innertube: Innertube;
   streamResults: StreamResults;
 }> {
-  const innertube = await Innertube.create({ cache: new UniversalCache(true) });
-  const webPoTokenResult = await generateWebPoToken(videoId);
+  configureProxy();
+  const innertube = await Innertube.create({
+    cache: undefined,//new UniversalCache(true), 
+    user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+    cookie: 'YSC=WF3cSBJCZqo; VISITOR_INFO1_LIVE=J4Cm6hPQS2I; VISITOR_PRIVACY_METADATA=CgJVUxIEGgAgOQ%3D%3D; LOGIN_INFO=AFmmF2swRQIhAIIL_2pmE2XVlZcXkgELgIlpQq7sySCtNHUOiNDbUXd4AiBA9kIwjT3_VNKwWJHR9BSYpM6IIIkzyDfPUWha038Dqg:QUQ3MjNmd0ZnMFMwMng2dnluaDVlTFRZZDV1VktYOGVEdFpuWnZJZnM0T0NLMHlsdWtXWnZQNjBZMHl3T0ZTTThOMTJhR0RIY1Q4WXpWOHlpblQ0NTU3THJNX3F3VHVnNWdDem5raVRvRzludzE4aWpBWUdBdTRpUUdvUFRjell1QmhCTU5iZmo4b1FvQVdDa3ZxeVFJN1dVNnlZNk9fTkpn; HSID=AjOF2GxFa96XIY_zr; SSID=AlimHly3qF2gVV0v9; APISID=BiTlChAbsFMYwgEA/AbmPqwOedSXFI7MOz; SAPISID=ed7HvlzOlsfoHviC/AOqrUTPMJQplO-1L9; __Secure-1PAPISID=ed7HvlzOlsfoHviC/AOqrUTPMJQplO-1L9; __Secure-3PAPISID=ed7HvlzOlsfoHviC/AOqrUTPMJQplO-1L9; SID=g.a0007whfwAT7qhrwBHZhTPSsUWmZ6EAS8kYL-levuoqkGKafKehSzFYzego-RohcWHDm9xXAyAACgYKAWwSARUSFQHGX2MiSE8YqZ5fx-JckfqgAL77hBoVAUF8yKqRMXDWOiEbUPd0egXMhwrM0076; __Secure-1PSID=g.a0007whfwAT7qhrwBHZhTPSsUWmZ6EAS8kYL-levuoqkGKafKehS-39TpwOxpPJPyVEkZVnzUAACgYKAdwSARUSFQHGX2MiipRR48dl46fa_IFHaS8kKRoVAUF8yKrab8k9jqIyOSKuMlht-p8V0076; __Secure-3PSID=g.a0007whfwAT7qhrwBHZhTPSsUWmZ6EAS8kYL-levuoqkGKafKehSIilvZYS4_xGZCiKoqrj5zgACgYKAVESARUSFQHGX2MiARLC8YPJRf8QFdaGvQWvaxoVAUF8yKqMldCAzP9XZaIyeykqS4jK0076; __Secure-BUCKET=CI0E; __Secure-ROLLOUT_TOKEN=CKzfvKay4t7E9AEQ-5zxw8GzigMYl7m0opbpkwM%3D; PREF=f4=4000000&tz=Asia.Shanghai&f5=30000&hl=zh-CN&f7=100; ST-l3hjtt=session_logininfo=AFmmF2swRQIhAIIL_2pmE2XVlZcXkgELgIlpQq7sySCtNHUOiNDbUXd4AiBA9kIwjT3_VNKwWJHR9BSYpM6IIIkzyDfPUWha038Dqg%3AQUQ3MjNmd0ZnMFMwMng2dnluaDVlTFRZZDV1VktYOGVEdFpuWnZJZnM0T0NLMHlsdWtXWnZQNjBZMHl3T0ZTTThOMTJhR0RIY1Q4WXpWOHlpblQ0NTU3THJNX3F3VHVnNWdDem5raVRvRzludzE4aWpBWUdBdTRpUUdvUFRjell1QmhCTU5iZmo4b1FvQVdDa3ZxeVFJN1dVNnlZNk9fTkpn; ST-tladcw=session_logininfo=AFmmF2swRQIhAIIL_2pmE2XVlZcXkgELgIlpQq7sySCtNHUOiNDbUXd4AiBA9kIwjT3_VNKwWJHR9BSYpM6IIIkzyDfPUWha038Dqg%3AQUQ3MjNmd0ZnMFMwMng2dnluaDVlTFRZZDV1VktYOGVEdFpuWnZJZnM0T0NLMHlsdWtXWnZQNjBZMHl3T0ZTTThOMTJhR0RIY1Q4WXpWOHlpblQ0NTU3THJNX3F3VHVnNWdDem5raVRvRzludzE4aWpBWUdBdTRpUUdvUFRjell1QmhCTU5iZmo4b1FvQVdDa3ZxeVFJN1dVNnlZNk9fTkpn; ST-3opvp5=session_logininfo=AFmmF2swRQIhAIIL_2pmE2XVlZcXkgELgIlpQq7sySCtNHUOiNDbUXd4AiBA9kIwjT3_VNKwWJHR9BSYpM6IIIkzyDfPUWha038Dqg%3AQUQ3MjNmd0ZnMFMwMng2dnluaDVlTFRZZDV1VktYOGVEdFpuWnZJZnM0T0NLMHlsdWtXWnZQNjBZMHl3T0ZTTThOMTJhR0RIY1Q4WXpWOHlpblQ0NTU3THJNX3F3VHVnNWdDem5raVRvRzludzE4aWpBWUdBdTRpUUdvUFRjell1QmhCTU5iZmo4b1FvQVdDa3ZxeVFJN1dVNnlZNk9fTkpn; ST-xuwub9=session_logininfo=AFmmF2swRQIhAIIL_2pmE2XVlZcXkgELgIlpQq7sySCtNHUOiNDbUXd4AiBA9kIwjT3_VNKwWJHR9BSYpM6IIIkzyDfPUWha038Dqg%3AQUQ3MjNmd0ZnMFMwMng2dnluaDVlTFRZZDV1VktYOGVEdFpuWnZJZnM0T0NLMHlsdWtXWnZQNjBZMHl3T0ZTTThOMTJhR0RIY1Q4WXpWOHlpblQ0NTU3THJNX3F3VHVnNWdDem5raVRvRzludzE4aWpBWUdBdTRpUUdvUFRjell1QmhCTU5iZmo4b1FvQVdDa3ZxeVFJN1dVNnlZNk9fTkpn; __Secure-1PSIDTS=sidts-CjUBWhotCRJxvmYyOm9E0jkQtnTQWPYbGUdkSmvxT0JqhyNRswJhRQ73zj6lif-qtb0m-WyP7xAA; __Secure-3PSIDTS=sidts-CjUBWhotCRJxvmYyOm9E0jkQtnTQWPYbGUdkSmvxT0JqhyNRswJhRQ73zj6lif-qtb0m-WyP7xAA; NID=530=hheJQlzuTmjuJsHf1tVJzxSS6s3FJk2pXodns0j8PLyss1Nxfs9tznPwgFUmZ25HDIKuDwyZzTwtvsKOse2aNkCGP6d78a0-bTBzApOO5gGdoXF-6lxvqtyZF-VVC20lJI52SjWyOinkhL6QHZiDr4ykrM55v_0HtHSyD80WY3Yz6SKJ5KXw53PlZ91mZRQzhXeowGEAsjIw72v-ECdPdzfmLDx8fz2a-3ZCYE6sXvP39yaTPBYq_pp-msI; SIDCC=AKEyXzVajAxHgDFhuFnxgLkkqn9ltlP1Q2h1CiRLeZKsj4GUf_1sVuKISmeVM3YTj2HA3C-Sxg; __Secure-1PSIDCC=AKEyXzXWbbK68x0Sg0WI-zWAP8VqCP01Uro9AjA6FGbBHOPJT58Nc87xz-gPuX4On1bzfMUMKA; __Secure-3PSIDCC=AKEyXzXQ38fylMIS-xyqg_WpmJhodrnmK82kXa8hSImlhZnpHmvoLxuL9NeIHCm1pHf1njnOAHA',
+    visitor_data: 'CgtKNENtNmhQUVMySSjTx_LOBjIKCgJVUxIEGgAgOQ%3D%3D',
+    enable_session_cache: false,
+    client_type: ClientType.WEB,
+    generate_session_locally: false,
+    retrieve_innertube_config: true,
+  });
+  const webPoTokenResult = await generateWebPoToken(innertube, videoId);
 
   // Get video metadata.
   const playerResponse = await makePlayerRequest(innertube, videoId);

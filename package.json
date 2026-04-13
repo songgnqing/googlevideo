@@ -81,5 +81,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LuanRT/GoogleVideo.git"
-  }
+  },
+  "packageManager": "npm@11.12.1"
 }

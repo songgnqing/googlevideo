@@ -10,7 +10,7 @@ import {
 
 import type { SabrPlaybackOptions } from 'googlevideo/sabr-stream';
 
-const VIDEO_ID = 'xjHO_02jZco';
+const VIDEO_ID = 'U5ldvKqR9KA';
 const OPTIONS: SabrPlaybackOptions = {
   preferWebM: true,
   preferOpus: true,
